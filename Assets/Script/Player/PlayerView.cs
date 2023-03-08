@@ -13,7 +13,7 @@ namespace Script.Player
     public class PlayerView : MonoBehaviour
     {
         private PlayerController _playerController;
-        
+
         [SerializeField] private Tag[] collisionTags;
         [SerializeField] private GameObject projectilePrefab;
         [SerializeField] private int poolSize = 10;
@@ -22,32 +22,24 @@ namespace Script.Player
         [SerializeField] private float maxDottedLineDistance = 5f;
         [SerializeField] private int dottedLineSegments = 10;
         [SerializeField] private LayerMask collisionLayerMask;
-        
+
         private Vector3 dottedLineEndpoint;
-        private Queue<GameObject> projectilePool;
+        private ObjectPool<ProjectileView> projectilePool;
         private LineRenderer dottedLineRenderer;
-        
+
         public void SetPlayerController(PlayerController playerController)
         {
             _playerController = playerController;
         }
-        
-        void Start()
+
+        private void Start()
         {
-            projectilePool = new Queue<GameObject>(poolSize);
-
-            for (int i = 0; i < poolSize; i++)
-            {
-                GameObject projectile = Instantiate(projectilePrefab);
-                projectile.SetActive(false);
-                projectilePool.Enqueue(projectile);
-            }
-
+            projectilePool = new ObjectPool<ProjectileView>(projectilePrefab.GetComponent<ProjectileView>(), poolSize, transform);
             dottedLineRenderer = GetComponent<LineRenderer>();
             dottedLineRenderer.positionCount = 0;
         }
 
-        void Update()
+        private void Update()
         {
             if (Input.GetMouseButton(0))
             {
@@ -71,25 +63,24 @@ namespace Script.Player
                 ShootProjectile();
                 dottedLineRenderer.positionCount = 0;
             }
-            
         }
 
-        void DrawDottedLine()
+        private void DrawDottedLine()
         {
-            dottedLineRenderer.positionCount = 10;
+            dottedLineRenderer.positionCount = dottedLineSegments;
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < dottedLineSegments; i++)
             {
-                Vector3 point = Vector3.Lerp(transform.position, dottedLineEndpoint, i / 9f);
+                Vector3 point = Vector3.Lerp(transform.position, dottedLineEndpoint, i / (float)(dottedLineSegments - 1));
                 dottedLineRenderer.SetPosition(i, point);
             }
         }
 
-        void ShootProjectile()
+        private void ShootProjectile()
         {
             if (currentBullets <= 0)
             {
-               LossMenu.Instance.ShowGameOver();  
+                LossMenu.Instance.ShowGameOver();
             }
 
             currentBullets--;
@@ -98,24 +89,20 @@ namespace Script.Player
 
             Vector2 direction = (dottedLineEndpoint - transform.position).normalized;
 
-            if (projectilePool.Count > 0)
+            ProjectileView projectile = projectilePool.GetObject();
+            if (projectile != null)
             {
-                GameObject projectile = projectilePool.Dequeue();
                 projectile.transform.position = transform.position;
-                projectile.SetActive(true);
+                projectile.gameObject.SetActive(true);
 
                 Rigidbody2D rb = projectile.GetComponent<Rigidbody2D>();
                 rb.velocity = direction * projectileSpeed;
                 rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
                 rb.sharedMaterial = new PhysicsMaterial2D { bounciness = 1f, friction = 0f };
-                
+
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
                 projectile.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
-
             }
         }
-
-        
-        
     }
-} 
+}
