@@ -27,9 +27,9 @@
 <h2>How to Play</h2>
 <p>It's simple! Just follow these steps:</p>
 <ol>
-<li>Aim your bow by moving the mouse.</li>
+<li>Aim your gun by moving the mouse.</li>
 <li>Press and hold the left mouse button to draw the bow.</li>
-<li>Release the left mouse button to shoot the arrow.</li>
+<li>Release the left mouse button to shoot the bullet.</li>
 <li>Hit the targets to score points.</li>
 </ol>
 <h2>Contributing</h2>
